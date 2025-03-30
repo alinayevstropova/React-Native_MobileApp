@@ -1,10 +1,11 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { darkTheme } from '../themes'; // Ensure the path is correct
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { darkTheme, lightTheme } from '../themes'; // Ensure the path is correct
 
 // 1. Create the context
 export const ThemeContext = createContext({
   theme: darkTheme, // Default theme
-  setTheme: () => {}, // Dummy function for type safety
+  toggleTheme: () => {}, // Dummy function for type safety
 });
 
 // 3. Custom hook to use the theme context
@@ -20,21 +21,39 @@ export function useTheme() {
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(darkTheme); // Initialize with darkTheme
 
-  // You might want to persist the theme in AsyncStorage, for example:
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === darkTheme ? lightTheme : darkTheme));
+  };
+
+  // Persist the theme in AsyncStorage
   useEffect(() => {
-    //  AsyncStorage logic here to get and set the theme (if desired)
-    //  Example:
-    //  const loadTheme = async () => {
-    //    const storedTheme = await AsyncStorage.getItem('appTheme');
-    //    if (storedTheme) {
-    //      // Logic to switch between themes based on storedTheme value
-    //      setTheme(darkTheme); // Or setTheme(lightTheme) if you have one
-    //    }
-    //  };
-    //  loadTheme();
+    const loadTheme = async () => {
+      try {
+        const storedTheme = await AsyncStorage.getItem('appTheme');
+        if (storedTheme) {
+          setTheme(storedTheme === 'dark' ? darkTheme : lightTheme);
+        }
+      } catch (error) {
+        console.error('Error loading theme:', error);
+      }
+    };
+
+    loadTheme();
   }, []);
 
-  const value = { theme, setTheme };
+  useEffect(() => {
+    const saveTheme = async () => {
+      try {
+        await AsyncStorage.setItem('appTheme', theme === darkTheme ? 'dark' : 'light');
+      } catch (error) {
+        console.error('Error saving theme:', error);
+      }
+    };
+
+    saveTheme();
+  }, [theme]);
+
+  const value = { theme, toggleTheme };
 
   return (
     <ThemeContext.Provider value={value}>

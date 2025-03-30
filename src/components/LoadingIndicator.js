@@ -1,30 +1,45 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 
-export default function LoadingIndicator() {
-  const rotation = useSharedValue(0);
-  const opacity = useSharedValue(1);
+const LoadingIndicator = () => {
+  const rotation = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(360, { duration: 2000, easing: Easing.linear }),
-      -1
-    );
-
-    opacity.value = withRepeat(
-      withTiming(0.5, { duration: 1000, easing: Easing.ease }, () => {
-        opacity.value = withTiming(1, { duration: 1000, easing: Easing.ease });
+    Animated.loop(
+      Animated.timing(rotation, {
+        toValue: 360,
+        duration: 2000,
+        easing: Easing.linear,
+        useNativeDriver: true,
       }),
-      -1
-    );
-  }, []);
+      { iterations: -1 }
+    ).start();
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-    opacity: opacity.value,
-  }));
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.5,
+          duration: 1000,
+          easing: Easing.ease,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.ease,
+          useNativeDriver: true,
+        }),
+      ]),
+      { iterations: -1 }
+    ).start();
+  }, [rotation, opacity]);
+
+  const animatedStyle = {
+    transform: [{ rotate: rotation.interpolate({ inputRange: [0, 360], outputRange: ['0deg', '360deg'] }) }],
+    opacity,
+  };
 
   return (
     <View style={styles.container}>
@@ -41,7 +56,7 @@ export default function LoadingIndicator() {
       </Animated.View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -60,3 +75,5 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
 });
+
+export default LoadingIndicator;

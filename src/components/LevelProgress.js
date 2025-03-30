@@ -1,39 +1,36 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import CircularProgress from 'react-native-circular-progress-indicator';
-import * as Animatable from 'react-native-animatable';
-import { darkTheme } from '../themes';
+import { useTheme } from '../context/ThemeContext'; // Import useTheme hook
+ // Import i18n for localization
 
-export default function LevelProgress({ level, experience, nextLevelExperience }) {
-  const progress = (experience / nextLevelExperience) * 100;
+const LevelProgress = ({ level, currentDistance, nextLevelDistance }) => {
+  const { theme } = useTheme(); // Access the current theme
+  const progress = (currentDistance / nextLevelDistance) * 100;
 
   return (
-    <Animatable.View
-      style={styles.container}
-      animation="fadeIn"
-      duration={1000}
-    >
+    <View style={styles.container}>
       <CircularProgress
         value={progress}
         maxValue={100}
         radius={60}
-        activeStrokeColor="#00FFFF"
+        activeStrokeColor="#00FF00"
         inActiveStrokeColor="#333"
-        title={`Уровень ${level}`}
+        title={`$'level' ${level}`} // Localize "Level"
         titleColor="#FFF"
-        titleStyle={darkTheme.title}
+        titleStyle={[styles.title, theme.text]} // Apply theme text style
         valueSuffix="%"
-        valueSuffixTextStyle={darkTheme.text}
-        progressValueStyle={darkTheme.text}
+        valueSuffixTextStyle={[styles.text, theme.text]} // Apply theme text style
+        progressValueStyle={[styles.text, theme.text]} // Apply theme text style
         activeStrokeWidth={8}
         inActiveStrokeWidth={8}
       />
-      <Text style={[styles.text, darkTheme.text]}>
-        {experience} / {nextLevelExperience} XP
+      <Text style={[styles.text, theme.text]}>
+        {currentDistance.toFixed(2)} / {nextLevelDistance.toFixed(2)} km
       </Text>
-    </Animatable.View>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -46,4 +43,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  title: {
+    fontWeight: 'bold',
+  },
 });
+
+export default LevelProgress;
